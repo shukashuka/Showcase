@@ -2,19 +2,32 @@
   "use strict";
 
   const cfg = Object.assign(
-    { githubUser: "", githubRepo: "", imageFolder: "images",
-      extensions: ["jpg", "jpeg", "png", "webp", "gif", "avif"] },
+    {
+      githubUser: "", githubRepo: "", branch: "",
+      imageFolder: "images",
+      extensions: ["jpg", "jpeg", "png", "webp", "gif", "avif"],
+      rootTitle: "Lainnya",
+      projects: {}
+    },
     window.PORTFOLIO_CONFIG
   );
 
   const $ = (sel, root = document) => root.querySelector(sel);
 
   const pages = $("#pages");
-  const strip = $("#strip");
+  const scroller = $("#projects");
+  const inner = $("#projectsInner");
   const status = $("#status");
   const count = $("#count");
-  const prevBtn = $("#prev");
-  const nextBtn = $("#next");
+  const roadmapWrap = $("#roadmapWrap");
+  const roadmap = $("#roadmap");
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text) node.textContent = text;
+    return node;
+  }
 
   /* ---------- Background ikut bergeser saat scroll ---------- */
   const updateProgress = () => {
@@ -43,7 +56,18 @@
 
   $("#year").textContent = new Date().getFullYear();
 
-  /* ---------- Ambil daftar foto dari folder ---------- */
+  /* ---------- Nama & urutan ---------- */
+  const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+  const okExt = (name) => cfg.extensions.includes(name.split(".").pop().toLowerCase());
+  const encodePath = (p) => p.split("/").map(encodeURIComponent).join("/");
+
+  // Angka + pemisah di depan nama hanya untuk urutan, tidak ditampilkan.
+  const stripOrder = (s) => s.replace(/^\d+[\s._-]+/, "");
+  const folderTitle = (name) => stripOrder(name).replace(/_+/g, " ").trim() || name;
+  const photoTitle = (file) =>
+    stripOrder(file.replace(/\.[^.]+$/, "")).replace(/[-_]+/g, " ").trim();
+
+  /* ---------- Ambil daftar project & foto dari repo ---------- */
   function detectRepo() {
     let user = cfg.githubUser;
     let repo = cfg.githubRepo;
@@ -59,23 +83,78 @@
     return { user, repo };
   }
 
-  async function listFromGithub() {
+  // Satu request saja: seluruh isi repo (daftar file) sekaligus.
+  async function fetchTree() {
     const { user, repo } = detectRepo();
     if (!user || !repo) throw new Error("no-repo");
 
-    const url = `https://api.github.com/repos/${user}/${repo}/contents/${cfg.imageFolder}`;
-    const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
-    if (!res.ok) throw new Error("github-" + res.status);
-
-    const data = await res.json();
-    return data.filter((f) => f.type === "file").map((f) => f.name);
+    const refs = cfg.branch ? [cfg.branch] : ["HEAD", "main", "master"];
+    let lastErr = new Error("github-404");
+    for (const ref of refs) {
+      const url = `https://api.github.com/repos/${user}/${repo}/git/trees/${encodeURIComponent(ref)}?recursive=1`;
+      const res = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+      if (res.ok) return res.json();
+      lastErr = new Error("github-" + res.status);
+      if (res.status !== 404) break;
+    }
+    throw lastErr;
   }
 
-  // Cadangan: kalau ada file images/images.json berisi ["a.jpg","b.jpg"]
-  async function listFromManifest() {
+  function groupsFromTree(data) {
+    const prefix = cfg.imageFolder.replace(/^\/+|\/+$/g, "") + "/";
+    const folders = new Map();
+    const rootFiles = [];
+
+    (data.tree || []).forEach((item) => {
+      if (item.type !== "blob" || !item.path.startsWith(prefix)) return;
+      const rel = item.path.slice(prefix.length);
+      if (!okExt(rel)) return;
+      const slash = rel.indexOf("/");
+      if (slash === -1) {
+        rootFiles.push(rel);
+      } else {
+        const folder = rel.slice(0, slash);
+        if (!folders.has(folder)) folders.set(folder, []);
+        folders.get(folder).push(rel.slice(slash + 1));
+      }
+    });
+
+    return { folders: [...folders].map(([folder, files]) => ({ folder, files })), rootFiles };
+  }
+
+  // Cadangan (mis. tes di komputer): file images/images.json
+  //   { "Project A": ["1.jpg", "2.jpg"], "Project B": ["a.jpg"] }
+  async function fetchManifest() {
     const res = await fetch(`${cfg.imageFolder}/images.json`, { cache: "no-cache" });
     if (!res.ok) throw new Error("no-manifest");
-    return res.json();
+    const d = await res.json();
+    if (Array.isArray(d)) return { folders: [], rootFiles: d.filter(okExt) };
+    return {
+      folders: Object.entries(d).map(([folder, files]) => ({ folder, files: files.filter(okExt) })),
+      rootFiles: []
+    };
+  }
+
+  function buildProjects({ folders, rootFiles }) {
+    const list = folders
+      .filter((f) => f.files.length)
+      .sort((a, b) => natural(a.folder, b.folder))
+      .map((f) => ({ folder: f.folder, title: folderTitle(f.folder), files: f.files }));
+
+    if (rootFiles.length) list.push({ folder: null, title: cfg.rootTitle, files: rootFiles });
+
+    return list.map((p, i) => {
+      const info = cfg.projects[p.folder] || cfg.projects[p.title] || {};
+      const base = p.folder ? `${cfg.imageFolder}/${encodePath(p.folder)}` : cfg.imageFolder;
+      const photos = p.files
+        .slice()
+        .sort(natural)
+        .map((rel) => ({
+          src: `${base}/${encodePath(rel)}`,
+          title: photoTitle(rel.split("/").pop())
+        }));
+      return { id: `project-${i + 1}`, title: p.title, year: info.year || "", desc: info.desc || "", photos };
+    });
   }
 
   function messageFor(err) {
@@ -83,139 +162,126 @@
     if (code === "no-repo")
       return "Alamat repo belum terdeteksi. Isi githubUser dan githubRepo di js/config.js.";
     if (code === "github-404")
-      return `Folder "${cfg.imageFolder}" tidak ditemukan di repo. Pastikan namanya benar dan sudah di-upload.`;
+      return "Repo tidak ditemukan. Pastikan repo berstatus Public dan namanya benar.";
     if (code === "github-403" || code === "github-429")
       return "Batas akses GitHub sedang tercapai. Coba muat ulang beberapa menit lagi.";
     return "Foto belum bisa dimuat. Coba muat ulang halaman.";
   }
 
-  const okExt = (name) => cfg.extensions.includes(name.split(".").pop().toLowerCase());
-  const natural = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
-  const titleFrom = (name) =>
-    name
-      .replace(/\.[^.]+$/, "")
-      .replace(/^\d+[\s._-]*/, "") // angka di depan hanya untuk urutan
-      .replace(/[-_]+/g, " ")
-      .trim();
+  /* ---------- Roadmap (bagian atas) ---------- */
+  function renderRoadmap(projects) {
+    roadmap.replaceChildren();
 
-  /* ---------- Tampilkan galeri ---------- */
-  const photos = [];
+    projects.forEach((p) => {
+      const li = el("li", "node");
+      const a = el("a");
+      a.href = "#" + p.id;
+      a.setAttribute("aria-label", `Lihat project ${p.title}`);
 
-  function render(names) {
-    names = names.filter(okExt).sort(natural);
+      a.append(el("span", "node-dot"));
+      a.append(el("span", "node-title", p.title));
+      if (p.year) a.append(el("span", "node-meta", p.year));
+      a.append(el("span", "node-meta", `${p.photos.length} foto`));
+      a.firstChild.setAttribute("aria-hidden", "true");
 
-    if (!names.length) {
-      status.textContent = `Belum ada foto. Upload foto ke folder "${cfg.imageFolder}".`;
-      return;
-    }
-
-    status.hidden = true;
-    count.textContent = `${names.length} foto`;
-
-    names.forEach((name, i) => {
-      const src = `${cfg.imageFolder}/${encodeURIComponent(name)}`;
-      const title = titleFrom(name);
-      photos.push({ src, title });
-
-      const shot = document.createElement("button");
-      shot.type = "button";
-      shot.className = "shot";
-      shot.setAttribute("aria-label", title ? `Buka foto: ${title}` : `Buka foto ${i + 1}`);
-
-      const img = new Image();
-      img.alt = title;
-      img.loading = "lazy";
-      img.decoding = "async";
-      img.draggable = false;
-      img.addEventListener("load", () => { shot.classList.add("loaded"); updateArrows(); });
-      img.addEventListener("error", () => { shot.hidden = true; });
-      img.src = src;
-      shot.appendChild(img);
-
-      if (title) {
-        const cap = document.createElement("span");
-        cap.className = "cap";
-        cap.textContent = title;
-        shot.appendChild(cap);
-      }
-
-      shot.addEventListener("click", () => {
-        if (moved) return; // abaikan klik setelah drag
-        openLightbox(i);
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        goToProject(p.id);
       });
-      strip.appendChild(shot);
+
+      li.append(a);
+      roadmap.append(li);
     });
 
-    updateArrows();
+    roadmapWrap.hidden = false;
   }
 
-  async function load() {
-    let names;
-    try {
-      names = await listFromGithub();
-    } catch (err) {
-      try {
-        names = await listFromManifest();
-      } catch {
-        status.textContent = messageFor(err);
-        return;
-      }
-    }
-    render(names);
+  // Loncat ke project di bagian karya
+  function goToProject(id) {
+    const target = document.getElementById(id);
+    if (!target) return;
+    const top =
+      target.getBoundingClientRect().top -
+      scroller.getBoundingClientRect().top +
+      scroller.scrollTop;
+    scroller.scrollTo({ top, behavior: "auto" });
+    pages.scrollTo({ top: $("#karya").offsetTop, behavior: "auto" }); // halus lewat CSS
   }
 
-  /* ---------- Geser galeri: tombol + drag ---------- */
-  function updateArrows() {
-    prevBtn.disabled = strip.scrollLeft <= 2;
-    nextBtn.disabled = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 2;
+  /* ---------- Galeri per project ---------- */
+  function renderGallery(projects) {
+    inner.replaceChildren();
+
+    const total = projects.reduce((n, p) => n + p.photos.length, 0);
+    count.textContent = `${projects.length} project, ${total} foto`;
+
+    projects.forEach((p) => {
+      const section = el("section", "project");
+      section.id = p.id;
+
+      const head = el("header", "project-head");
+      head.append(el("h3", null, p.title));
+      head.append(el("p", "project-meta", [p.year, `${p.photos.length} foto`].filter(Boolean).join(", ")));
+      section.append(head);
+
+      if (p.desc) section.append(el("p", "project-desc", p.desc));
+
+      const mosaic = el("div", "mosaic");
+      p.photos.forEach((photo, i) => {
+        const tile = el("button", "tile");
+        tile.type = "button";
+        tile.setAttribute(
+          "aria-label",
+          photo.title ? `Buka foto: ${photo.title}` : `Buka foto ${i + 1} dari ${p.title}`
+        );
+
+        const img = new Image();
+        img.alt = photo.title;
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.draggable = false;
+        img.addEventListener("load", () => {
+          // Bentuk kotak mengikuti proporsi asli foto, jadi barisnya tetap rata
+          if (img.naturalWidth && img.naturalHeight) {
+            tile.style.setProperty("--ar", (img.naturalWidth / img.naturalHeight).toFixed(4));
+          }
+          tile.classList.add("loaded");
+        });
+        img.addEventListener("error", () => { tile.hidden = true; });
+        img.src = photo.src;
+        tile.append(img);
+
+        if (photo.title) tile.append(el("span", "cap", photo.title));
+        tile.addEventListener("click", () => openLightbox(p, i));
+        mosaic.append(tile);
+      });
+
+      section.append(mosaic);
+      inner.append(section);
+    });
   }
-  const step = () => Math.max(240, strip.clientWidth * 0.8);
-  prevBtn.addEventListener("click", () => strip.scrollBy({ left: -step(), behavior: "smooth" }));
-  nextBtn.addEventListener("click", () => strip.scrollBy({ left: step(), behavior: "smooth" }));
-  strip.addEventListener("scroll", updateArrows, { passive: true });
-  window.addEventListener("resize", updateArrows);
 
-  let down = false, moved = false, startX = 0, startLeft = 0;
-  strip.addEventListener("pointerdown", (e) => {
-    if (e.pointerType !== "mouse" || e.button !== 0) return;
-    down = true;
-    moved = false;
-    startX = e.clientX;
-    startLeft = strip.scrollLeft;
-  });
-  window.addEventListener("pointermove", (e) => {
-    if (!down) return;
-    const dx = e.clientX - startX;
-    if (Math.abs(dx) > 5) {
-      moved = true;
-      strip.classList.add("dragging");
-    }
-    if (moved) strip.scrollLeft = startLeft - dx;
-  });
-  window.addEventListener("pointerup", () => {
-    if (!down) return;
-    down = false;
-    strip.classList.remove("dragging");
-    setTimeout(() => { moved = false; }, 0);
-  });
-
-  /* ---------- Lightbox ---------- */
+  /* ---------- Foto besar (lapisan di atas halaman) ---------- */
   const dlg = $("#lightbox");
   const lbImg = $("#lbImg");
   const lbCap = $("#lbCap");
   const lbNum = $("#lbNum");
+  let list = [];
+  let listTitle = "";
   let current = 0;
 
   function show(i) {
-    current = (i + photos.length) % photos.length;
-    const p = photos[current];
-    lbImg.src = p.src;
-    lbImg.alt = p.title;
-    lbCap.textContent = p.title;
-    lbNum.textContent = `${current + 1} / ${photos.length}`;
+    current = (i + list.length) % list.length;
+    const photo = list[current];
+    lbImg.src = photo.src;
+    lbImg.alt = photo.title;
+    lbCap.textContent = photo.title;
+    lbNum.textContent = `${listTitle}, foto ${current + 1} dari ${list.length}`;
   }
 
-  function openLightbox(i) {
+  function openLightbox(project, i) {
+    list = project.photos;
+    listTitle = project.title;
     show(i);
     if (!dlg.open) dlg.showModal();
   }
@@ -230,6 +296,41 @@
     if (e.key === "ArrowLeft") show(current - 1);
     if (e.key === "ArrowRight") show(current + 1);
   });
+  dlg.addEventListener("close", () => { lbImg.removeAttribute("src"); });
+
+  // Geser jari untuk pindah foto (HP)
+  let touchX = null;
+  dlg.addEventListener("touchstart", (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+  dlg.addEventListener("touchend", (e) => {
+    if (touchX === null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+  }, { passive: true });
+
+  /* ---------- Mulai ---------- */
+  async function load() {
+    let groups;
+    try {
+      groups = groupsFromTree(await fetchTree());
+    } catch (err) {
+      try {
+        groups = await fetchManifest();
+      } catch {
+        status.textContent = messageFor(err);
+        return;
+      }
+    }
+
+    const projects = buildProjects(groups);
+    if (!projects.length) {
+      status.textContent = `Belum ada foto. Buat folder project di dalam "${cfg.imageFolder}", lalu upload fotonya ke folder itu.`;
+      return;
+    }
+
+    renderRoadmap(projects);
+    renderGallery(projects);
+  }
 
   load();
 })();

@@ -1,3 +1,11 @@
-Taruh semua foto galeri di folder ini (jpg, jpeg, png, webp, gif, avif).
-Foto tampil berurutan sesuai nama file. Contoh: 01-pantai.jpg, 02-sunset.jpg
-Angka di depan nama dipakai untuk urutan dan tidak ditampilkan sebagai judul.
+Buat satu folder per project di sini, lalu taruh fotonya di dalam folder itu.
+
+  images/Project A/foto1.jpg
+  images/Project A/foto2.jpg
+  images/Project B/foto1.jpg
+
+Nama folder = judul project (roadmap dan galeri dibuat otomatis).
+Urutan project dan foto mengikuti nama. Beri awalan angka + spasi/strip untuk mengatur urutan:
+  01 Project A, 02 Project B, 03-Project C  (angka awalan tidak ditampilkan)
+Foto yang ditaruh langsung di folder images (tanpa folder project) masuk ke grup "Lainnya".
+Format: jpg, jpeg, png, webp, gif, avif. Sebaiknya kompres foto (lebar sekitar 1600 px) supaya cepat dibuka.

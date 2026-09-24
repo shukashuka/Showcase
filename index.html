@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Nama Kamu | Portofolio</title>
-  <meta name="description" content="Portofolio Nama Kamu. Kumpulan karya foto dan cara menghubungi saya.">
+  <meta name="description" content="Portofolio Nama Kamu. Project yang pernah dikerjakan dan cara menghubungi saya.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,11 +25,11 @@
 
   <main class="pages" id="pages">
 
-    <!-- ============ BAGIAN 1: PERKENALAN ============ -->
+    <!-- ============ BAGIAN 1: PERKENALAN + ROADMAP ============ -->
     <section class="page intro" id="intro">
       <div class="wrap intro-grid">
         <div class="intro-text">
-          <h1 class="name">Nama<br>Kamu</h1>
+          <h1 class="name">Nama Kamu</h1>
           <p class="bio">
             Ganti teks ini dengan perkenalan singkat: siapa kamu, apa yang kamu kerjakan,
             dan apa yang bisa orang temukan di halaman ini.
@@ -43,27 +43,26 @@
                onerror="this.closest('.portrait').remove()">
         </figure>
       </div>
+
+      <!-- Roadmap: dibuat otomatis dari folder project di images/ -->
+      <div class="wrap roadmap-wrap" id="roadmapWrap" hidden>
+        <h2 class="roadmap-title">Project yang pernah saya kerjakan</h2>
+        <ol class="roadmap" id="roadmap"></ol>
+      </div>
     </section>
 
-    <!-- ============ BAGIAN 2: GALERI (otomatis dari folder images) ============ -->
+    <!-- ============ BAGIAN 2: KARYA PER PROJECT (otomatis dari images/<nama project>/) ============ -->
     <section class="page gallery" id="karya">
       <header class="wrap gallery-head">
-        <div>
-          <h2>Karya</h2>
-          <p class="count" id="count" aria-live="polite"></p>
-        </div>
-        <div class="ctrls">
-          <button class="ctl" id="prev" type="button" aria-label="Geser ke kiri" disabled>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
-          </button>
-          <button class="ctl" id="next" type="button" aria-label="Geser ke kanan" disabled>
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
-          </button>
-        </div>
+        <h2>Karya</h2>
+        <p class="count" id="count" aria-live="polite"></p>
       </header>
 
-      <div class="strip" id="strip" tabindex="0" role="region" aria-label="Galeri foto, geser ke samping untuk melihat lainnya"></div>
-      <p class="status wrap" id="status">Memuat foto...</p>
+      <div class="projects" id="projects" tabindex="0" role="region" aria-label="Daftar project dan foto">
+        <div class="wrap projects-inner" id="projectsInner">
+          <p class="status" id="status">Memuat foto...</p>
+        </div>
+      </div>
     </section>
 
     <!-- ============ BAGIAN 3: KONTAK & SOSIAL MEDIA ============ -->
@@ -88,10 +87,10 @@
 
   </main>
 
-  <!-- Tampilan foto ukuran besar -->
+  <!-- Foto besar: muncul sebagai lapisan di atas halaman (bukan tab baru) -->
   <dialog class="lightbox" id="lightbox" aria-label="Tampilan foto besar">
     <div class="lb-stage"><img id="lbImg" alt=""></div>
-    <button class="ctl lb-close" id="lbClose" type="button" aria-label="Tutup">
+    <button class="ctl lb-close" id="lbClose" type="button" aria-label="Tutup foto">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
     <button class="ctl lb-prev" id="lbPrev" type="button" aria-label="Foto sebelumnya">
@@ -100,7 +99,7 @@
     <button class="ctl lb-next" id="lbNext" type="button" aria-label="Foto berikutnya">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
     </button>
-    <p class="lb-bar"><span id="lbCap"></span> <span id="lbNum"></span></p>
+    <p class="lb-bar"><span class="lb-cap" id="lbCap"></span><span id="lbNum"></span></p>
   </dialog>
 
   <script src="js/config.js"></script>
