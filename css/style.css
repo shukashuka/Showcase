@@ -2,12 +2,12 @@
    Warna, font, dan jarak utama. Ubah di sini.
    ===================================================== */
 :root {
-  --ink: #0e2529;          /* biru laguna gelap (warna dasar) */
-  --ink-deep: #081619;     /* lebih gelap, untuk teks di atas tombol */
-  --bone: #ece6d8;         /* warna teks */
-  --muted: #a6b7b3;        /* teks pendukung */
-  --gold: #f0b23a;         /* warna aksen */
-  --line: rgba(236, 230, 216, 0.2);
+  --paper: #f5fbf9;        /* warna dasar halaman (putih kehijauan) */
+  --text: #10292e;         /* warna teks utama */
+  --muted: #4d6a67;        /* teks pendukung */
+  --accent: #0b7f83;       /* aksen teal: hover dan penanda aktif */
+  --sun: #f5b63d;          /* kuning matahari: tombol */
+  --line: rgba(16, 41, 46, 0.18);
 
   --font-display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
   --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -25,8 +25,8 @@
 html, body { height: 100%; }
 
 body {
-  background: var(--ink);
-  color: var(--bone);
+  background: var(--paper);
+  color: var(--text);
   font-family: var(--font-body);
   line-height: 1.6;
   overflow: hidden; /* yang di-scroll adalah <main class="pages"> */
@@ -34,7 +34,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -48,9 +48,9 @@ body {
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(55vmax 55vmax at 88% calc(var(--p) * 100%), rgba(240, 178, 58, 0.22), transparent 62%),
-    radial-gradient(70vmax 70vmax at 8% calc(100% - var(--p) * 100%), rgba(46, 124, 128, 0.55), transparent 62%),
-    linear-gradient(180deg, var(--ink), var(--ink-deep));
+    radial-gradient(55vmax 55vmax at 88% calc(var(--p) * 100%), rgba(255, 200, 87, 0.45), transparent 62%),
+    radial-gradient(70vmax 70vmax at 8% calc(100% - var(--p) * 100%), rgba(112, 205, 226, 0.5), transparent 62%),
+    linear-gradient(180deg, #f9fdfb, #e8f5f2);
 }
 
 /* =====================================================
@@ -113,11 +113,11 @@ h1, h2 {
   display: block;
   width: 10px;
   height: 10px;
-  border: 1.5px solid var(--bone);
+  border: 1.5px solid var(--text);
   border-radius: 50%;
 }
 .dot::after { content: ""; position: absolute; inset: -8px; } /* area sentuh lebih besar */
-.dot[aria-current="true"] { background: var(--gold); border-color: var(--gold); }
+.dot[aria-current="true"] { background: var(--accent); border-color: var(--accent); }
 
 .dot span {
   position: absolute;
@@ -126,7 +126,8 @@ h1, h2 {
   transform: translateY(-50%);
   padding: 2px 10px;
   border-radius: 4px;
-  background: var(--ink-deep);
+  background: var(--text);
+  color: var(--paper);
   font-size: 0.85rem;
   white-space: nowrap;
   opacity: 0;
@@ -162,13 +163,13 @@ h1, h2 {
   margin-top: 36px;
   padding: 14px 28px;
   border-radius: 999px;
-  background: var(--gold);
-  color: var(--ink-deep);
+  background: var(--sun);
+  color: var(--text);
   font-weight: 500;
   text-decoration: none;
   transition: background 0.2s, transform 0.2s;
 }
-.btn:hover { background: #f7c65e; transform: translateY(-2px); }
+.btn:hover { background: #ffc85c; transform: translateY(-2px); }
 
 .portrait img {
   display: block;
@@ -177,6 +178,7 @@ h1, h2 {
   aspect-ratio: 4 / 5;
   object-fit: cover;
   border-radius: 4px;
+  box-shadow: 0 18px 40px -20px rgba(16, 41, 46, 0.45);
 }
 
 /* =====================================================
@@ -204,12 +206,12 @@ h1, h2 {
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 50%;
-  background: transparent;
-  color: var(--bone);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--text);
   cursor: pointer;
 }
-.ctl:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
-.ctl:disabled { opacity: 0.3; cursor: default; }
+.ctl:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.ctl:disabled { opacity: 0.35; cursor: default; }
 .ctl svg {
   width: 20px;
   height: 20px;
@@ -224,14 +226,14 @@ h1, h2 {
   display: flex;
   gap: 16px;
   height: min(62vh, 640px);
-  padding: 4px var(--gutter);
+  padding: 4px var(--gutter) 22px;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x proximity;
   scroll-padding-inline: var(--gutter);
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
-  scrollbar-color: var(--gold) transparent;
+  scrollbar-color: var(--accent) transparent;
   cursor: grab;
 }
 .strip.dragging { cursor: grabbing; scroll-snap-type: none; scroll-behavior: auto; }
@@ -245,7 +247,8 @@ h1, h2 {
   border: 0;
   border-radius: 4px;
   overflow: hidden;
-  background: rgba(236, 230, 216, 0.08);
+  background: rgba(16, 41, 46, 0.07);
+  box-shadow: 0 14px 30px -18px rgba(16, 41, 46, 0.5);
   scroll-snap-align: start;
   cursor: zoom-in;
 }
@@ -268,10 +271,10 @@ h1, h2 {
   right: 0;
   bottom: 0;
   padding: 32px 14px 12px;
-  background: linear-gradient(transparent, rgba(8, 22, 25, 0.85));
+  background: linear-gradient(transparent, rgba(8, 22, 25, 0.8));
   font-size: 0.95rem;
   text-align: left;
-  color: var(--bone);
+  color: #fff;
   opacity: 0;
 }
 .shot:hover .cap,
@@ -306,11 +309,11 @@ h1, h2 {
   gap: 24px;
   padding: 20px 0;
   border-bottom: 1px solid var(--line);
-  color: var(--bone);
+  color: var(--text);
   text-decoration: none;
   transition: padding 0.2s, color 0.2s;
 }
-.links a:hover { padding-left: 12px; color: var(--gold); }
+.links a:hover { padding-left: 12px; color: var(--accent); }
 
 .links .k { color: var(--muted); }
 .links .v {
@@ -339,9 +342,9 @@ h1, h2 {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--bone);
+  color: var(--text);
 }
-.lightbox::backdrop { background: rgba(5, 14, 16, 0.94); }
+.lightbox::backdrop { background: rgba(245, 251, 249, 0.96); }
 
 .lb-stage {
   display: grid;
@@ -355,9 +358,10 @@ h1, h2 {
   max-height: 100%;
   object-fit: contain;
   border-radius: 4px;
+  box-shadow: 0 24px 60px -28px rgba(16, 41, 46, 0.55);
 }
 
-.lightbox .ctl { position: absolute; background: rgba(8, 22, 25, 0.7); }
+.lightbox .ctl { position: absolute; background: #fff; }
 .lb-close { top: 18px; right: 18px; }
 .lb-prev { left: 18px; top: 50%; transform: translateY(-50%); }
 .lb-next { right: 18px; top: 50%; transform: translateY(-50%); }
