@@ -51,12 +51,41 @@
   const panels = Array.from(document.querySelectorAll('.panel'));
   let current = 0, animating = false;
 
+  /* ---------- Dot navigation (kanan layar) ---------- */
+  const dots = Array.from(document.querySelectorAll('.dot-nav .dot'));
+  function setActiveDot(i){
+    dots.forEach((d, idx) => d.classList.toggle('active', idx === i));
+  }
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      if(isMobile){
+        panels[i].scrollIntoView({behavior:'smooth', block:'start'});
+        setActiveDot(i);
+      } else {
+        goToPanel(i);
+      }
+    });
+  });
+  if(isMobile){
+    // Update dot aktif sesuai posisi scroll biasa di HP/tablet
+    const observer = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          setActiveDot(panels.indexOf(entry.target));
+        }
+      });
+    }, {threshold:.5});
+    panels.forEach(p => observer.observe(p));
+  }
+  setActiveDot(0);
+
   function goToPanel(i){
     if(i < 0 || i >= panels.length || animating) return;
     animating = true;
     current = i;
     container.style.transform = `translateY(-${i * 100}vh)`;
     setBGColorForPanel(i);
+    setActiveDot(i);
     setTimeout(()=>{ animating = false; }, 850);
   }
 
