@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<!-- ============================================================
+  SEO TAGS — edit nilai di bawah ini. Lihat GUIDE.md bagian "SEO"
+  untuk penjelasan lengkap tiap tag.
+============================================================= -->
+<title>Nama Kamu — Portfolio</title>
+<meta name="description" content="Tulis deskripsi singkat 1-2 kalimat tentang kamu dan karya kamu di sini.">
+<meta name="keywords" content="portfolio, desain, nama kamu, kata kunci lain">
+<meta name="author" content="Nama Kamu">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://username.github.io/">
+
+<!-- Open Graph (Facebook, LinkedIn, WhatsApp preview) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Nama Kamu — Portfolio">
+<meta property="og:description" content="Tulis deskripsi singkat tentang kamu dan karya kamu di sini.">
+<meta property="og:image" content="https://username.github.io/image/bg/home-top-bg.jpg">
+<meta property="og:url" content="https://username.github.io/">
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Nama Kamu — Portfolio">
+<meta name="twitter:description" content="Tulis deskripsi singkat tentang kamu dan karya kamu di sini.">
+<meta name="twitter:image" content="https://username.github.io/image/bg/home-top-bg.jpg">
+
+<!-- JSON-LD structured data, membantu Google memahami ini situs personal -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Nama Kamu",
+  "url": "https://username.github.io/",
+  "jobTitle": "Designer",
+  "sameAs": []
+}
+</script>
+<!-- ============================================================ -->
+
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="bg3d"></canvas>
+
+<nav id="dot-nav" class="dot-nav" aria-label="Navigasi bagian halaman">
+  <button class="dot" data-target="panel-home" aria-label="Ke bagian atas"></button>
+  <button class="dot" data-target="panel-projects" aria-label="Ke bagian tengah"></button>
+  <button class="dot" data-target="panel-profile" aria-label="Ke bagian bawah"></button>
+</nav>
+
+<div id="fp-container">
+
+  <!-- SECTION 1: HOME / HERO -->
+  <section class="panel" id="panel-home" data-bg="image/bg/home-top-bg.jpg">
+    <div class="home-grid">
+      <div class="home-left">
+        <h1 id="hero-heading">Halo, saya<br>Nama Kamu.</h1>
+        <p id="hero-sub" class="lede">Short introduction tentang hasil design kamu. Ganti kalimat ini di index.html, cari id="hero-sub".</p>
+      </div>
+      <div class="home-right">
+        <div id="skill-infographic" class="skill-infographic" aria-label="Skill infographic"></div>
+      </div>
+    </div>
+    <div class="scroll-hint">scroll ↓</div>
+  </section>
+
+  <!-- SECTION 2: PROJECTS -->
+  <section class="panel" id="panel-projects" data-bg="image/bg/home-mid-bg.jpg">
+    <h2 class="panel-title">Projects</h2>
+    <div id="projects-grid" class="projects-grid"><p class="loading-note">Memuat daftar project…</p></div>
+  </section>
+
+  <!-- SECTION 3: PROFILE -->
+  <section class="panel" id="panel-profile">
+    <h2 class="panel-title">Profil</h2>
+    <div id="profile-content" class="profile-grid"></div>
+  </section>
+
+</div>
+
+<!-- Project gallery overlay -->
+<div id="project-overlay" class="overlay">
+  <button id="overlay-close" class="overlay-close" aria-label="Tutup">&times;</button>
+  <h3 id="overlay-title"></h3>
+  <div id="overlay-grid" class="overlay-grid"></div>
+</div>
+
+<!-- Lightbox for single photo -->
+<div id="lightbox" class="lightbox">
+  <button id="lightbox-close" class="overlay-close" aria-label="Tutup">&times;</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
